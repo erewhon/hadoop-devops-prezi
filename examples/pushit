@@ -1,0 +1,3 @@
+#!/bin/bash
+ssh steve.net mkdir -p examples
+rsync -Pavz . steve.net:examples/

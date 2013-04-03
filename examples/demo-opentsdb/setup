@@ -1,0 +1,55 @@
+#!/bin/bash -x
+#
+# fetches and installs OpenTSDB and HBase
+
+if [ ! -d ~/Software/hbase-0.94.5 ]; then
+
+  cd ~/Software
+
+  wget http://www.apache.org/dist/hbase/hbase-0.94.5/hbase-0.94.5.tar.gz
+  tar xzf hbase-0.94.5.tar.gz
+
+  cd hbase-0.94.5
+
+  mkdir -p ~/Data/hbase
+
+  hbase_rootdir=/home/erewhon/Data/hbase
+iface=lo`uname | sed -n s/Darwin/0/p`
+cat >conf/hbase-site.xml <<EOF
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<configuration>
+  <property>
+    <name>hbase.rootdir</name>
+    <value>file:///$hbase_rootdir/hbase-\${user.name}/hbase</value>
+  </property>
+  <property>
+    <name>hbase.zookeeper.dns.interface</name>
+    <value>$iface</value>
+  </property>
+  <property>
+    <name>hbase.regionserver.dns.interface</name>
+    <value>$iface</value>
+  </property>
+  <property>
+    <name>hbase.master.dns.interface</name>
+    <value>$iface</value>
+  </property>
+</configuration>
+EOF
+
+  ./bin/start-hbase.sh
+fi
+
+if [ ! -d ~/Software/opentsdb ]; then
+  cd ~/Software
+
+  git clone git://github.com/OpenTSDB/opentsdb.git
+
+  cd opentsdb
+
+  ./build.sh
+
+  env COMPRESSION=none HBASE_HOME=../hbase-0.94.5 ./src/create_table.sh
+  
+fi

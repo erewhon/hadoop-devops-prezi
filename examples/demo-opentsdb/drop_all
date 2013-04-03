@@ -1,0 +1,9 @@
+#!/bin/bash
+
+cat <<COMMANDS | ~/Software/hbase-0.94.5/bin/hbase shell
+disable 'tsdb'
+disable 'tsdb-uid'
+
+drop 'tsdb'
+drop 'tsdb-uid'
+COMMANDS

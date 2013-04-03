@@ -1,0 +1,7 @@
+#!/bin/bash
+tsdtmp=${TMPDIR-'/tmp'}/tsd
+mkdir -p "$tsdtmp"
+
+cd ~/Software/opentsdb
+
+./build/tsdb tsd --port=4242 --staticroot=build/staticroot --cachedir="$tsdtmp"

@@ -1,0 +1,6 @@
+#!/bin/bash
+
+cd ~/Software/opentsdb
+env COMPRESSION=none HBASE_HOME=../hbase-0.94.5 ./src/create_table.sh
+
+  

@@ -1,0 +1,4 @@
+#!/bin/bash
+
+cd ~/Software/opentsdb
+./build/tsdb mkmetric some.stat1 some.stat2

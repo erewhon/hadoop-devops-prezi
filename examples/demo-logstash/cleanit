@@ -1,0 +1,2 @@
+#!/bin/bash
+rm -r ./data ./.sass-cache ~/.sincedb_*

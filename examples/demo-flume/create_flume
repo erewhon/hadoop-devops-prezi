@@ -1,0 +1,10 @@
+#!/bin/bash
+#
+# creates flume table
+
+cat <<COMMANDS | ~/Software/hbase-0.94.5/bin/hbase shell
+
+create 'log_table',
+  {NAME => 'some_cf', VERSIONS => 1, COMPRESSION => 'NONE', BLOOMFILTER => 'ROW'}
+
+COMMANDS
