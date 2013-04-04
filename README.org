@@ -1,0 +1,6 @@
+This is the presentation I gave at the April 2013 Houston Hadoop meetup.
+
+The presentation is written in Emacs [[http://orgmode.org/][OrgMode]], and slides were marked
+up using the useful [[https://github.com/relevance/org-html-slideshow][org-html-slideshow]] package.  I have placed a
+formatted version of the slideshow [[http://erewhon.github.com/hadoop-devops-prezi][here]].
+
