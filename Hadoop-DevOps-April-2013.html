@@ -1,0 +1,1252 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+               "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<title>Hadoop for DevOps</title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+<meta name="title" content="Hadoop for DevOps"/>
+<meta name="generator" content="Org-mode"/>
+<meta name="generated" content="2013-04-03 23:38:53 CDT"/>
+<meta name="author" content="Steven Byrnes"/>
+<meta name="description" content=""/>
+<meta name="keywords" content=""/>
+
+<link rel="stylesheet" type="text/css" href="common.css" />
+<link rel="stylesheet" type="text/css" href="screen.css" media="screen" />
+<link rel="stylesheet" type="text/css" href="projection.css" media="projection" />
+<link rel="stylesheet" type="text/css" href="presenter.css" media="presenter" />
+
+
+</head>
+<body>
+
+<div id="preamble">
+
+</div>
+
+<div id="content">
+<h1 class="title">Hadoop for DevOps</h1>
+
+
+<p>Type <strong>T</strong> to begin the slide show.</p>
+
+
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#sec-1">Hadoop for DevOps</a>
+<ul>
+<li><a href="#sec-1-1">Notes</a></li>
+</ul>
+</li>
+<li><a href="#sec-2">Problems</a>
+<ul>
+<li><a href="#sec-2-1">Notes</a></li>
+</ul>
+</li>
+<li><a href="#sec-3">How did we deal with it before?</a>
+<ul>
+<li><a href="#sec-3-1">MRTG</a></li>
+<li><a href="#sec-3-2">RRDTool-based products</a></li>
+<li><a href="#sec-3-3">Lots of other choices</a></li>
+</ul>
+</li>
+<li><a href="#sec-4">Solutions</a>
+<ul>
+<li><a href="#sec-4-1">What we would like</a></li>
+<li><a href="#sec-4-2">OpenTSDB</a></li>
+<li><a href="#sec-4-3">OpenTSDB - Components</a></li>
+<li><a href="#sec-4-4">What is a metric?</a></li>
+<li><a href="#sec-4-5">Demo - OpenTSDB</a></li>
+<li><a href="#sec-4-6">Simple log processing</a></li>
+<li><a href="#sec-4-7">Scribe</a></li>
+<li><a href="#sec-4-8">Kafka</a></li>
+<li><a href="#sec-4-9">Flume</a></li>
+<li><a href="#sec-4-10">Demo - Flume</a></li>
+<li><a href="#sec-4-11">Logstash</a></li>
+<li><a href="#sec-4-12">Demo - Logstash</a></li>
+<li><a href="#sec-4-13">Other solutions</a></li>
+</ul>
+</li>
+<li><a href="#sec-5">Future Work</a>
+<ul>
+<li><a href="#sec-5-1">Notes</a></li>
+</ul>
+</li>
+<li><a href="#sec-6">Conclusion</a>
+<ul>
+<li><a href="#sec-6-1">Notes</a></li>
+</ul>
+</li>
+<li><a href="#sec-7">Resources</a></li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-1" class="outline-2">
+<h2 id="sec-1">Hadoop for DevOps &nbsp;&nbsp;&nbsp;<span class="tag"><span class="slide">slide</span></span></h2>
+<div class="outline-text-2" id="text-1">
+
+
+
+<div style="text-align: center">
+<p>Steven Byrnes
+</p>
+<p>
+<a href="https://github.com/erewhon">https://github.com/erewhon</a>
+</p>
+</div>
+
+
+</div>
+
+<div id="outline-container-1-1" class="outline-3">
+<h3 id="sec-1-1">Notes &nbsp;&nbsp;&nbsp;<span class="tag"><span class="notes">notes</span></span></h3>
+<div class="outline-text-3" id="text-1-1">
+
+
+<p>
+When working on this presentation, I realized the presentation was a
+little ambiguous? Am I talking about DevOps for maintaining a Hadoop
+cluster, or am I talking about leverage Hadoop for DevOps work. This
+talk will cover the latter.
+</p>
+<p>
+We will be discussing leveraging Hadoop, and HBase, for capturing server
+information.  In other words, we have a cluster, or clusters, running
+a variety of workloads.  How do we keep an eye on that, what really
+does that entail, and how can we scale it?
+</p>
+<p>
+We will cover a few tools that directly or indirectly can be used to
+process system level data - logs and system measurements - and store
+them in Hadoop or HBase.
+</p>
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-2" class="outline-2">
+<h2 id="sec-2">Problems &nbsp;&nbsp;&nbsp;<span class="tag"><span class="slide">slide</span></span></h2>
+<div class="outline-text-2" id="text-2">
+
+
+<ul>
+<li>Numbers
+<ul>
+<li>Monitoring
+</li>
+<li>Capacity planning
+</li>
+</ul>
+
+</li>
+<li>Text
+<ul>
+<li>Logs
+</li>
+</ul>
+
+</li>
+</ul>
+
+
+
+</div>
+
+<div id="outline-container-2-1" class="outline-3">
+<h3 id="sec-2-1">Notes &nbsp;&nbsp;&nbsp;<span class="tag"><span class="notes">notes</span></span></h3>
+<div class="outline-text-3" id="text-2-1">
+
+
+<p>
+We need to monitor numbers. Why? SLAs. Capacity planning. What is
+acceptable performance? What do we deem to be proper resource
+utilization? How many users is too many? How big is the work queue?
+What are the current numbers? And how fast are they growing? (We need
+the latter for capacity planning.)
+</p>
+<p>
+What do I mean by logs? We run applications. It could be one big one.
+Or lots of them with different owners. Odds are, they generate output.
+Some of it is structured, some semi-structured, and some of it totally
+unstructured. Probably all of the above. Examples: web server logs,
+Hadoop output, servers themself. So we have analytic information,
+errors, and other metrics.
+</p>
+<p>
+We typically want to process it real-time, or semi-real time. And we
+want to explore the data real time.
+</p>
+<p>
+Suppose we're watching a cluster. We need to track thousands of
+metrics across hundreds or thousands of machines. Some every second.
+And the logs&hellip; oh the logs&hellip;
+</p>
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-3" class="outline-2">
+<h2 id="sec-3">How did we deal with it before? &nbsp;&nbsp;&nbsp;<span class="tag"><span class="slide">slide</span></span></h2>
+<div class="outline-text-2" id="text-3">
+
+
+
+</div>
+
+<div id="outline-container-3-1" class="outline-3">
+<h3 id="sec-3-1">MRTG &nbsp;&nbsp;&nbsp;<span class="tag"><span class="slide">slide</span></span></h3>
+<div class="outline-text-3" id="text-3-1">
+
+
+<p>
+<img src="./img/mrtg.png" style="float:right;" alt="./img/mrtg.png" />
+</p>
+<p>
+<a href="http://static.usenix.org/publications/library/proceedings/lisa98/full_papers/oetiker/oetiker.pdf">The Multi Router Traffic Grapher</a> - Usenix, December 1998
+</p>
+
+</div>
+
+<div id="outline-container-3-1-1" class="outline-4">
+<h4 id="sec-3-1-1">Notes &nbsp;&nbsp;&nbsp;<span class="tag"><span class="notes">notes</span></span></h4>
+<div class="outline-text-4" id="text-3-1-1">
+
+
+<p>
+Graphing like it's 1998!
+</p>
+<p>
+This was awesome when it first came out, and still serves its purpose.
+The techniques use internally led to&hellip; <a href="#sec-3-2">RRDTool</a>.
+</p>
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-3-2" class="outline-3">
+<h3 id="sec-3-2"><span class="target">RRDTool</span> -based products &nbsp;&nbsp;&nbsp;<span class="tag"><span class="slide">slide</span></span></h3>
+<div class="outline-text-3" id="text-3-2">
+
+
+
+<div style="text-align: center">
+<p>Round Robin Database
+</p>
+
+<div class="figure">
+<p><img src="./img/status_rrd_graph_img_1day_small.png"  alt="./img/status_rrd_graph_img_1day_small.png" /></p>
+<p>1 day, 5 minute average</p>
+</div>
+
+
+<div class="figure">
+<p><img src="./img/status_rrd_graph_img_1week_small.png"  alt="./img/status_rrd_graph_img_1week_small.png" /></p>
+<p>1 week, 1 hour average</p>
+</div>
+
+<p>
+A TSDB
+</p>
+
+</div>
+
+
+</div>
+
+<div id="outline-container-3-2-1" class="outline-4">
+<h4 id="sec-3-2-1">Notes &nbsp;&nbsp;&nbsp;<span class="tag"><span class="notes">notes</span></span></h4>
+<div class="outline-text-4" id="text-3-2-1">
+
+
+<p>
+TSDB = Time Series Database.
+</p>
+<p>
+Round Robin Database. What does that mean? For the use cases of MRTG
+and the ilk, you want to see what your load looked like today, but you
+also want to capture long term trends. Is my network becoming more
+busy? Is my disk slowly filling up. Problem is that can cause
+unbounded expansion of data. (And back in the megabyte scale era, this
+was a bigger deal.)
+</p>
+<p>
+RRD is a Time Series Database; TSDB. Basically, when you create it,
+you specify your sample periods. Suppose you capture data once a
+minute. With RRD, you can roll up the data in 5 minute increments for
+a day, and 1 hour increments for a week. And it's constant space.
+Which is really cool. One less thing to think about. (You don't want
+your system monitoring to cause you extra system monitoring issues.)
+And it gives you long term trends.
+</p>
+<p>
+But what if you want a 1 month period? And you didn't specify it when
+you created it?  Bummer&hellip;
+</p>
+<p>
+Or this happens: a prod issue lands on your desk. You need to look
+into a problem. Requires 1 minute granularity from last week? LOL!
+</p>
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-3-3" class="outline-3">
+<h3 id="sec-3-3">Lots of other choices &nbsp;&nbsp;&nbsp;<span class="tag"><span class="slide">slide</span></span></h3>
+<div class="outline-text-3" id="text-3-3">
+
+
+<ul>
+<li>Zenoss
+</li>
+<li>Nagios
+</li>
+<li>Cactii
+</li>
+<li>Syslog, grep?
+</li>
+<li>Splunk
+</li>
+</ul>
+
+
+
+</div>
+
+<div id="outline-container-3-3-1" class="outline-4">
+<h4 id="sec-3-3-1">Notes &nbsp;&nbsp;&nbsp;<span class="tag"><span class="notes">notes</span></span></h4>
+<div class="outline-text-4" id="text-3-3-1">
+
+
+<p>
+Some of these are all-in-one products that are extensible, have
+plugins, training, etc. Some you have to combine with other products.
+</p>
+<p>
+Problems: data locked in there. For example, web access logs. Those
+are handy, and have their own tools. But suppose you have other
+things&hellip; diagnostics. Errors. Might want to track those. Want to
+cross correlate different things. Web response time, network traffic,
+and database IO.
+</p>
+<p>
+Also&hellip; traditional tools can have scalability problems. Use
+traditional databases, for example.
+</p>
+<p>
+Textual stuff you want to search or act on. Numeric information, or
+information you can turn into numbers, that you want to graph.
+</p>
+<p>
+Syslog?  Grep?  Logging like it's 1988!  Seriously&hellip;
+</p>
+<p>
+Splunk?  A good solution, from what I've heard, for certain issues.
+</p>
+</div>
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-4" class="outline-2">
+<h2 id="sec-4">Solutions &nbsp;&nbsp;&nbsp;<span class="tag"><span class="slide">slide</span></span></h2>
+<div class="outline-text-2" id="text-4">
+
+
+
+</div>
+
+<div id="outline-container-4-1" class="outline-3">
+<h3 id="sec-4-1">What we would like &nbsp;&nbsp;&nbsp;<span class="tag"><span class="slide">slide</span></span></h3>
+<div class="outline-text-3" id="text-4-1">
+
+
+<ul>
+<li>more data
+</li>
+<li>more flexible graphing.
+  I want to see my web request latency vs my database latency.  And
+  maybe some other metric combo I just thought of
+</li>
+<li>basically, more cowbell!
+</li>
+</ul>
+
+
+
+<p>
+Hadoop FTW!
+</p>
+
+
+</div>
+
+<div id="outline-container-4-1-1" class="outline-4">
+<h4 id="sec-4-1-1">Notes &nbsp;&nbsp;&nbsp;<span class="tag"><span class="notes">notes</span></span></h4>
+<div class="outline-text-4" id="text-4-1-1">
+
+
+<p>
+What do I want? Well&hellip; ideally not have have server or app problems.
+But that's not going to happen.
+</p>
+<p>
+So let's talk about solutions.  Since this is a Hadoop meetup, we'll
+focus on things in the Hadoop ecosystem, or that work around the
+edges.
+</p>
+<p>
+Since we've got big data technologies, ideally I'd want more data. No
+downsampling. More flexible graphing. I want to see my web request
+latency vs my database latency. And maybe some other metric combo I
+just thought of.  Basically, more cowbell!
+</p>
+<p>
+Ultimately, this becomes a message passing, processing, and recording
+problem.  Events are generated on a server in a cluster, and we need
+to capture it and store it somewhere.  So some of the solutions
+ultimately are message queue products, albeit ones targeting this space.
+</p>
+<p>
+Meta-irony: if you have sufficiently large Hadoop, or other, cluster
+it might be driving your needs to track lots of things&hellip;
+</p>
+<p>
+And as an aside, one of the core use cases for Hadoop was log processing
+to assist with ad placement.
+</p>
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-4-2" class="outline-3">
+<h3 id="sec-4-2">OpenTSDB &nbsp;&nbsp;&nbsp;<span class="tag"><span class="slide">slide</span></span></h3>
+<div class="outline-text-3" id="text-4-2">
+
+
+<ul>
+<li>Runs on HBase
+</li>
+<li>No downsampling
+</li>
+<li>Originally written by <a href="http://stumbleupon.com/">StumbleUpon</a>
+</li>
+<li>Written to store and query metrics across clusters
+</li>
+<li>Large scale
+<ul>
+<li>Hundreds of thousands of time series
+</li>
+<li>Billions datapoints&hellip; per day!
+</li>
+</ul>
+
+</li>
+</ul>
+
+
+
+</div>
+
+<div id="outline-container-4-2-1" class="outline-4">
+<h4 id="sec-4-2-1">Notes &nbsp;&nbsp;&nbsp;<span class="tag"><span class="notes">notes</span></span></h4>
+<div class="outline-text-4" id="text-4-2-1">
+
+
+<p>
+Quite a few companies use it.  Box.  Tumblr.  StumbleUpon of course.
+</p>
+<p>
+HBase manual even mentions OpenTSDB as a way to monitor your HBase.
+</p>
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-4-3" class="outline-3">
+<h3 id="sec-4-3">OpenTSDB - Components &nbsp;&nbsp;&nbsp;<span class="tag"><span class="slide">slide</span></span></h3>
+<div class="outline-text-3" id="text-4-3">
+
+
+
+<div style="text-align: center">
+
+<p>
+<img src="img/tsdb-architecture.png"  alt="img/tsdb-architecture.png" />
+</p>
+<p>
+(from opentsdb.net)
+</p>
+</div>
+
+
+</div>
+
+<div id="outline-container-4-3-1" class="outline-4">
+<h4 id="sec-4-3-1">Notes &nbsp;&nbsp;&nbsp;<span class="tag"><span class="notes">notes</span></span></h4>
+<div class="outline-text-4" id="text-4-3-1">
+
+
+<p>
+tsd = Time Series Daemon. Writes the metrics to HBase. Also provides
+web interface for querying.
+</p>
+<p>
+Other components: tcollector. Talks to the time series daemon. Will
+run scripts, de-dup, send to TSD, handle disconnections. Scripts just
+have to write output to standard output. It can be as simple as a 1 or
+2 line shell script!
+</p>
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-4-4" class="outline-3">
+<h3 id="sec-4-4">What is a metric? &nbsp;&nbsp;&nbsp;<span class="tag"><span class="slide">slide</span></span></h3>
+<div class="outline-text-3" id="text-4-4">
+
+
+<ul>
+<li>name
+</li>
+<li>Unix timestamp (second resolution; millisecond in forks and next
+  version)
+</li>
+<li>value (64 bit integer or floating point number)
+</li>
+<li>0 or more key-value tags
+</li>
+</ul>
+
+
+<p>
+Example:
+</p>
+
+
+
+<pre class="example">mysql.connections 123400000 200 host=db1 env=production
+</pre>
+
+
+
+</div>
+
+<div id="outline-container-4-4-1" class="outline-4">
+<h4 id="sec-4-4-1">Notes &nbsp;&nbsp;&nbsp;<span class="tag"><span class="notes">notes</span></span></h4>
+<div class="outline-text-4" id="text-4-4-1">
+
+
+<p>
+Anything that can be expressed as a number can be a metric.
+Databases, number of users, network statistics, etc.
+</p>
+<p>
+Tags can have anything, like host, environment (prod vs qa), etc.
+</p>
+<p>
+How big are they? How much space? 100 billion points is about 1 TB.
+(Using LZO compressed HBase tables.) About 12 bytes per data point.
+</p>
+<p>
+There is support for purging old data if you don't want to store data
+forever. But there are people out there storing a trillion data
+points.
+</p>
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-4-5" class="outline-3">
+<h3 id="sec-4-5">Demo - OpenTSDB &nbsp;&nbsp;&nbsp;<span class="tag"><span class="slide">slide</span></span></h3>
+<div class="outline-text-3" id="text-4-5">
+
+
+
+</div>
+
+<div id="outline-container-4-5-1" class="outline-4">
+<h4 id="sec-4-5-1">Notes &nbsp;&nbsp;&nbsp;<span class="tag"><span class="notes">notes</span></span></h4>
+<div class="outline-text-4" id="text-4-5-1">
+
+
+<p>
+Quick start once HBase and OpenTSDB are installed.
+</p>
+<p>
+Start (single node) HBase (in HBase directory):
+</p>
+
+
+
+<pre class="example">./bin/start-hbase.sh 
+</pre>
+
+
+<p>
+Create tables if necessary (in opentsdb directory):
+</p>
+
+
+
+<pre class="example">env COMPRESSION=none HBASE_HOME=../hbase-0.94.4 ./src/create_table.sh
+</pre>
+
+
+<p>
+Examine tables:
+</p>
+
+
+
+<pre class="example">../hbase-0.94.4/bin/hbase shell
+describe 'tsdb'
+describe 'tsdb-uid'
+</pre>
+
+
+<p>
+Start tsdb:
+</p>
+
+
+
+<pre class="example">tsdtmp=${TMPDIR-'/tmp'}/tsd
+mkdir -p "$tsdtmp"
+./build/tsdb tsd --port=4242 --staticroot=build/staticroot --cachedir="$tsdtmp"
+</pre>
+
+
+<p>
+Look at web interface:
+</p>
+
+
+
+<pre class="example">open http://localhost:4242
+</pre>
+
+
+<p>
+Ok&hellip; now add some metrics:
+</p>
+
+
+
+<pre class="example">./build/tsdb mkmetric some.stat1 some.stat2
+</pre>
+
+
+<p>
+(Show auto completion in web interface)
+</p>
+<p>
+Or, alternatively, add a bunch for self monitoring:
+</p>
+
+
+
+<pre class="example">echo stats | nc -w 1 localhost 4242 \
+| awk '{ print $1 }' | sort -u \
+| xargs ./build/tsdb mkmetric
+</pre>
+
+
+<p>
+Now load up data (script to be provided in github):
+</p>
+
+
+
+<pre class="example">../hbase-examples/genstats.pl | nc -w 2 $me 4242
+</pre>
+
+
+<p>
+Look at interface for past 10 minutes. Set to auto refresh every 5
+seconds. Now, load up a lot, then start loading continuously.
+</p>
+
+
+
+<pre class="example">../hbase-examples/genstats2.pl| wc -l
+1,209,602
+
+../hbase-examples/genstats2.pl| nc -w 1 localhost 4242
+
+../hbase-examples/genstats.pl|nc -w 1 localhost 4242
+
+while true                                          
+do
+ ../hbase-examples/genstats.pl|nc -w 1 localhost 4242
+ sleep 4
+done
+</pre>
+
+
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-4-6" class="outline-3">
+<h3 id="sec-4-6">Simple log processing &nbsp;&nbsp;&nbsp;<span class="tag"><span class="slide">slide</span></span></h3>
+<div class="outline-text-3" id="text-4-6">
+
+
+<ul>
+<li>Upload logs into HDFS
+</li>
+<li>External Hive table
+</li>
+<li>Done!
+</li>
+</ul>
+
+
+
+</div>
+
+<div id="outline-container-4-6-1" class="outline-4">
+<h4 id="sec-4-6-1">Notes &nbsp;&nbsp;&nbsp;<span class="tag"><span class="notes">notes</span></span></h4>
+<div class="outline-text-4" id="text-4-6-1">
+
+
+<p>
+Example from <a href="http://help.papertrailapp.com/kb/analytics/log-analytics-with-hadoop-and-hive">interweb</a>:
+</p>
+
+
+
+<pre class="example">CREATE EXTERNAL TABLE events (
+  id bigint, received_at string, generated_at string, source_id int, source_name string, source_ip string, facility string, severity string, program string, message string
+)
+PARTITIONED BY (
+  dt string
+)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t'
+STORED AS TEXTFILE
+LOCATION 's3://your-s3-bucket.yourdomain.com/papertrail/logs';
+</pre>
+
+
+<p>
+It works, it's simple, but it's a one shot thing. Wouldn't want to
+continuously do this necessarily. It works, but not the most scalable thing.
+</p>
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-4-7" class="outline-3">
+<h3 id="sec-4-7">Scribe &nbsp;&nbsp;&nbsp;<span class="tag"><span class="slide">slide</span></span></h3>
+<div class="outline-text-3" id="text-4-7">
+
+
+<ul>
+<li>Started by Facebook
+</li>
+<li>Log aggregation
+</li>
+<li>Needs other tools
+</li>
+<li><a href="https://github.com/facebook/scribe">https://github.com/facebook/scribe</a>
+</li>
+</ul>
+
+
+
+</div>
+
+<div id="outline-container-4-7-1" class="outline-4">
+<h4 id="sec-4-7-1">Notes &nbsp;&nbsp;&nbsp;<span class="tag"><span class="notes">notes</span></span></h4>
+<div class="outline-text-4" id="text-4-7-1">
+
+
+<p>
+Facebook, Twitter, Zygna.
+</p>
+<p>
+WWFD (What would Facebook Do?)  They wrote Scribe.  
+</p>
+<p>
+"Scribe is a server for aggregating log data that's streamed in real
+time from clients. It is designed to be scalable and reliable."
+</p>
+<p>
+May be abandonware. (No updates in over a year.)
+</p>
+<p>
+Not out of box solution.
+</p>
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-4-8" class="outline-3">
+<h3 id="sec-4-8">Kafka &nbsp;&nbsp;&nbsp;<span class="tag"><span class="slide">slide</span></span></h3>
+<div class="outline-text-3" id="text-4-8">
+
+
+<ul>
+<li>Apache project.  Started by LinkedIn
+</li>
+<li>Pub sub messaging
+</li>
+<li>Used to move activity stream data (i.e. what's in logs) into Hadoop
+</li>
+<li><a href="http://kafka.apache.org/">http://kafka.apache.org/</a>
+</li>
+</ul>
+
+
+
+</div>
+
+<div id="outline-container-4-8-1" class="outline-4">
+<h4 id="sec-4-8-1">Notes &nbsp;&nbsp;&nbsp;<span class="tag"><span class="notes">notes</span></span></h4>
+<div class="outline-text-4" id="text-4-8-1">
+
+
+<p>
+Competes with Scribe and Flume, but has messaging semantics.
+</p>
+<p>
+Persistent messaging.
+</p>
+<p>
+Can load into HDFS. However, out of box, needs code or log4j config to
+generate messages. (If you don't use log4j&hellip; well&hellip; sorry.)
+</p>
+<p>
+Useful if you control your applications' code.
+</p>
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-4-9" class="outline-3">
+<h3 id="sec-4-9">Flume &nbsp;&nbsp;&nbsp;<span class="tag"><span class="slide">slide</span></span></h3>
+<div class="outline-text-3" id="text-4-9">
+
+
+<ul>
+<li>Apache project.  Started by Cloudera
+</li>
+<li>Sources and sinks
+</li>
+<li>Sources include files, syslog, network port, Avro, and Scribe!
+</li>
+<li>Sinks include Avro, HDFS, HBase, ElasticSearch, and IRC!
+</li>
+<li><a href="http://flume.apache.org/">http://flume.apache.org/</a>
+</li>
+</ul>
+
+
+<p>
+<img src="./img/flume-diagram-small.png"  alt="./img/flume-diagram-small.png" />
+</p>
+
+</div>
+
+<div id="outline-container-4-9-1" class="outline-4">
+<h4 id="sec-4-9-1">Notes &nbsp;&nbsp;&nbsp;<span class="tag"><span class="notes">notes</span></span></h4>
+<div class="outline-text-4" id="text-4-9-1">
+
+
+<p>
+"Apache Flume is a distributed, reliable, and available service for
+efficiently collecting, aggregating, and moving large amounts of log
+data. Its main goal is to deliver data from applications to Apache
+Hadoop's HDFS. It has a simple and flexible architecture based on
+streaming data flows. It is robust and fault tolerant with tunable
+reliability mechanisms and many failover and recovery mechanisms. It
+uses a simple extensible data model that allows for online analytic
+applications."
+</p>
+<p>
+Since sources and sinks support Avro, you can chain them and create a
+hierarchy of agents.
+</p>
+<p>
+Centralized configuration?  Centralized liveness monitoring?
+</p>
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-4-10" class="outline-3">
+<h3 id="sec-4-10">Demo - Flume &nbsp;&nbsp;&nbsp;<span class="tag"><span class="slide">slide</span></span></h3>
+<div class="outline-text-3" id="text-4-10">
+
+
+
+</div>
+
+<div id="outline-container-4-10-1" class="outline-4">
+<h4 id="sec-4-10-1">Notes &nbsp;&nbsp;&nbsp;<span class="tag"><span class="notes">notes</span></span></h4>
+<div class="outline-text-4" id="text-4-10-1">
+
+
+<p>
+The following example loads some Apache web server logs into HBase. No
+extraction of data from the logs is attempted: each line is just
+stored as a literal value in HBase. There is an "interceptor" that can
+use regular expressions to parse and pick apart structured data and
+store it into separate HBase columns.
+</p>
+<p>
+First, created a simple HBase table:
+</p>
+
+
+
+<pre class="example">create 'log_table',
+  {NAME =&gt; 'some_cf', VERSIONS =&gt; 1, COMPRESSION =&gt; 'NONE', BLOOMFILTER =&gt; 'ROW'}
+</pre>
+
+
+<p>
+Then, used the following simple agent configuration:
+</p>
+
+
+
+<pre class="example"># flume-hbase.conf: A single-node Flume configuration that writes to HBase.  Reads from Syslog.
+#
+# To start:
+#
+#   ./bin/flume-ng agent --conf-file ~/examples/demo-flume/flume-hbase.conf --name a2 --conf ./conf
+#
+
+# Name the components on this agent
+a1.sources = r1
+a1.sinks = k1
+a1.channels = c1
+
+#
+# spooldir source type
+#
+# Renames files to .COMPLETED
+a1.sources.r1.type = spooldir
+a1.sources.r1.spoolDir = /var/log/apache/flumeSpool
+a1.sources.r1.fileHeader = true
+
+#
+# Define a source interceptor
+#
+a1.sources.r1.interceptors = i1
+a1.sources.r1.interceptors.i1.type = timestamp
+a1.sources.r1.interceptors.i1.preserveExisting = true
+
+#
+# Logger sync
+#
+# a1.sinks.k1.type = logger
+
+#
+# HBase sync
+#
+a1.sinks.k1.type = org.apache.flume.sink.hbase.HBaseSink
+a1.sinks.k1.table = log_table
+a1.sinks.k1.columnFamily = some_cf
+a1.sinks.k1.serializer = org.apache.flume.sink.hbase.RegexHbaseEventSerializer
+
+# Use a channel which buffers events in memory
+a1.channels.c1.type = memory
+a1.channels.c1.capacity = 1000
+a1.channels.c1.transactionCapacity = 100
+
+# Bind the source and sink to the channel
+a1.sources.r1.channels = c1
+a1.sinks.k1.channel = c1
+</pre>
+
+
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-4-11" class="outline-3">
+<h3 id="sec-4-11">Logstash &nbsp;&nbsp;&nbsp;<span class="tag"><span class="slide">slide</span></span></h3>
+<div class="outline-text-3" id="text-4-11">
+
+
+<ul>
+<li>Log shipper
+</li>
+<li><a href="http://logstash.net/docs/1.1.9/">multiple</a> inputs, filters and outputs
+</li>
+<li>Outputs include OpenTSDB
+</li>
+<li>Swiss Army Knive at log handling
+</li>
+</ul>
+
+
+
+</div>
+
+<div id="outline-container-4-11-1" class="outline-4">
+<h4 id="sec-4-11-1">Notes &nbsp;&nbsp;&nbsp;<span class="tag"><span class="notes">notes</span></span></h4>
+<div class="outline-text-4" id="text-4-11-1">
+
+
+<p>
+Doesn't directly deal with Hadoop ecosystem, but I'm highlighting it
+for its log shipping abilities, and its ability to interoperate with a
+wide variety of inputs and outputs. In the case of outputs, it can
+send information to OpenTSDB. (In which case you'll want to use a
+filter to extract information from the logs that can be turned into a
+metric suitable for OpenTSDB.)
+</p>
+<p>
+It's a Swiss Army Knive&hellip; maybe too much of a Swiss Army Knife!
+</p>
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-4-12" class="outline-3">
+<h3 id="sec-4-12">Demo - Logstash &nbsp;&nbsp;&nbsp;<span class="tag"><span class="slide">slide</span></span></h3>
+<div class="outline-text-3" id="text-4-12">
+
+
+
+</div>
+
+<div id="outline-container-4-12-1" class="outline-4">
+<h4 id="sec-4-12-1">Notes &nbsp;&nbsp;&nbsp;<span class="tag"><span class="notes">notes</span></span></h4>
+<div class="outline-text-4" id="text-4-12-1">
+
+
+<p>
+Logstash example is a little too chatty for notes; see github for
+details. I ran it with an embedded Elastic search. Once it starts up
+(which can take a minute or 3), you can point browser at
+<a href="http://localhost:9292/">http://localhost:9292/</a> and start searching away&hellip;
+</p>
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-4-13" class="outline-3">
+<h3 id="sec-4-13">Other solutions &nbsp;&nbsp;&nbsp;<span class="tag"><span class="slide">slide</span></span></h3>
+<div class="outline-text-3" id="text-4-13">
+
+
+<p>
+(Non-comprehensive list)
+</p>
+<ul>
+<li>Logster
+</li>
+<li>StatsD
+</li>
+<li>Fluentd
+</li>
+<li>Many different visualizations (<a href="http://square.github.com/cubism/">Cubism</a>, &hellip;)
+</li>
+</ul>
+
+
+
+</div>
+
+<div id="outline-container-4-13-1" class="outline-4">
+<h4 id="sec-4-13-1">Notes &nbsp;&nbsp;&nbsp;<span class="tag"><span class="notes">notes</span></span></h4>
+<div class="outline-text-4" id="text-4-13-1">
+
+
+<p>
+These don't necessarily directly interop with HDFS, HBase, or OpenTSDB, but have
+plugins or otherwise can feed data.  A whole lot of it is role your own.
+</p>
+<p>
+Facebook does it. But when you're dealing with petabytes of data,
+you're probably used to rolling your own stuff.
+</p>
+</div>
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-5" class="outline-2">
+<h2 id="sec-5">Future Work &nbsp;&nbsp;&nbsp;<span class="tag"><span class="slide">slide</span></span></h2>
+<div class="outline-text-2" id="text-5">
+
+
+<p>
+Great!  So now what?
+</p>
+
+</div>
+
+<div id="outline-container-5-1" class="outline-3">
+<h3 id="sec-5-1">Notes &nbsp;&nbsp;&nbsp;<span class="tag"><span class="notes">notes</span></span></h3>
+<div class="outline-text-3" id="text-5-1">
+
+
+<p>
+This is great.  We can capture server telemetry.  We can process and
+search it near-real-time.  We can graph real time.  And since we're
+using Hadoop or HBase backing stores, we can scale out and deal with
+large clusters of servers.  We can even use these tools for monitoring
+Hadoop itself.
+</p>
+<p>
+But we're missing some things with what I've shown.  We don't have out
+of the box alerting.  Disk filling up.  Host going down.   That kind
+of thing.
+</p>
+<p>
+Logstash can feed data to Rieman, Ganglia and the website Pagerduty.
+Those can be used for alerts. Riemann you can do more complex
+processing with your event stream. There are people doing the same
+thing with OpenTSDB, but it's in forks, or they intercept the metrics
+before they hand them to OpenTSDB. Version 2.0 should add easier
+pluggability for feeding your metric stream to other places.
+</p>
+<p>
+And speaking of OpenTSDB, there are some limitations. Second
+granularity of events. For some users, you need millisecond. That's
+coming in version 2.0 too. (There are forks out there that support
+it already.)
+</p>
+<p>
+Other blue sky stuff: feed events into Storm and do Complex Event
+Processing (CEP) or machine learning. Maybe figure out things for us,
+or allow dynamic workload tuning?
+</p>
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-6" class="outline-2">
+<h2 id="sec-6">Conclusion &nbsp;&nbsp;&nbsp;<span class="tag"><span class="slide">slide</span></span></h2>
+<div class="outline-text-2" id="text-6">
+
+
+
+</div>
+
+<div id="outline-container-6-1" class="outline-3">
+<h3 id="sec-6-1">Notes &nbsp;&nbsp;&nbsp;<span class="tag"><span class="notes">notes</span></span></h3>
+<div class="outline-text-3" id="text-6-1">
+
+
+<p>
+We did a high level overview of some of the tools available for
+processing logs and analyzing statistics.
+</p>
+<p>
+I've focused on some of the more low level tools that directly talk
+with Hadoop / HBase.  There are tools that have been adapted to work
+on top of these and provide a nicer front end.  Things like Graphite,
+which does graphing.
+</p>
+<p>
+Since the data is in Hadoop / HBase, you can then process it with
+tools like Pig, Hive, Cascalog, or even R.
+</p>
+<p>
+Mostly, most of these aren't plug in play solutions. They're more like
+tinker toys: you get a bunch of pieces. What you build is up to you.
+</p>
+<p>
+We mostly looked at the analisys end.  Traditional system monitor
+tools also perform alerting.  Plugging in tools into the messaging
+buses some of these tools support, like Avro for Flume or Redis for
+Logstash, one could construct very complicated real-time workflows to
+deal with large clusters.
+</p>
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-7" class="outline-2">
+<h2 id="sec-7">Resources &nbsp;&nbsp;&nbsp;<span class="tag"><span class="slide">slide</span></span></h2>
+<div class="outline-text-2" id="text-7">
+
+
+<ul>
+<li><a href="http://opentsdb.net">OpenTSDB</a>
+</li>
+<li><a href="http://flume.apache.org">Flume</a>
+</li>
+<li><a href="http://logstash.net">Logstash</a>
+
+</li>
+<li><a href="http://kafka.apache.org/">Kafka</a>
+</li>
+<li><a href="https://github.com/facebook/scribe">Scribe</a>
+</li>
+<li><a href="https://github.com/etsy/logster">Logster</a>
+</li>
+<li><a href="https://github.com/etsy/statsd/">StatsD</a>
+</li>
+<li><a href="http://graphite.wikidot.com">Graphite</a>
+</li>
+<li><a href="https://github.com/aphyr/riemann">Riemann</a>
+
+</li>
+<li><a href="http://flume.apache.org/releases/content/1.3.1/FlumeUserGuide.pdf">Flume User Guide</a> - seems more up to date than HTML version?
+</li>
+<li><a href="http://cuddletech.com/blog/?p=795">Hadoop Analysis of Apache Logs Using Flume-NG, Hive and Pig</a>
+</li>
+<li><a href="http://www.infoq.com/presentations/Hadoop-HDFS-Facebook">Running the largest Hadoop DFS cluster</a> - Facebook
+</li>
+<li><a href="http://mapredit.blogspot.de/2012/06/apache-flume-12x-and-hbase.html">Flume and HBase</a>
+</li>
+<li><a href="http://axonflux.com/how-facebook-uses-scribe-hadoop-and-hive-for">http://axonflux.com/how-facebook-uses-scribe-hadoop-and-hive-for</a>
+</li>
+</ul>
+
+
+
+
+
+
+<script type="text/javascript" src="org-html-slideshow.js"></script>
+
+
+
+
+
+</div>
+</div>
+</div>
+
+<div id="postamble">
+<p class="date">Date: 2013-04-03 23:38:53 CDT</p>
+<p class="author">Author: Steven Byrnes</p>
+<p class="email"><a href="mailto:erewhon@hephaestus.local">erewhon@hephaestus.local</a></p>
+<p class="creator">Org version 7.8.11 with Emacs version 24</p>
+<a href="http://validator.w3.org/check?uri=referer">Validate XHTML 1.0</a>
+
+</div>
+</body>
+</html>

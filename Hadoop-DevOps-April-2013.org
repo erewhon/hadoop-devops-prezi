@@ -3,7 +3,7 @@
 #+BEGIN_HTML
 <p>Type <strong>T</strong> to begin the slide show.</p>
 #+END_HTML
-#+OPTIONS: num:nil toc:2 tags:nil
+#+OPTIONS: num:nil toc:2
 
 * Hadoop for DevOps                                                   :slide:
 
